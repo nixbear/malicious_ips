@@ -5,28 +5,33 @@ on:
     - cron: '*/30 * * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-banned:
     runs-on: self-hosted
-
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PUSH_PAT }}
+          path: malicious_ips
+
       - name: Run update script
-        run: |
-          echo "Running script.sh..."
-          bash ~/script.sh
+        run: bash ~/script.sh
 
       - name: Commit and push updated IP list
+        working-directory: malicious_ips
         run: |
-          cd ~/malicious_ips
           git add malicious_ips.txt
-
+          
           if git diff --staged --quiet; then
             echo "Nothing to update."
             exit 0
           fi
-
-          git -c user.name='nixbear-actions' -c user.email='bot@srv.local' commit -m "Update banned IPs $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
-
-          git remote set-url origin https://x-access-token:${{ secrets.PUSH_PAT }}@github.com/nixbear/malicious_ips.git
-          git push origin main
-
+          
+          git config user.name 'nixbear-actions'
+          git config user.email ${{ secrets.GH_EMAIL }}
+          git commit -m "Update banned IPs $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git push
