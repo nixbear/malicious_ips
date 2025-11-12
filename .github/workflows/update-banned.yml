@@ -1,0 +1,32 @@
+name: Update Fail2Ban banned IPs
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update-banned:
+    runs-on: self-hosted
+
+    steps:
+      - name: Run update script
+        run: |
+          echo "Running script.sh..."
+          bash ~/script.sh
+
+      - name: Commit and push updated IP list
+        run: |
+          cd ~/malicious_ips
+          git add malicious_ips.txt
+
+          if git diff --staged --quiet; then
+            echo "Nothing to update."
+            exit 0
+          fi
+
+          git -c user.name='nixbear-actions' -c user.email='bot@srv.local' commit -m "Update banned IPs $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+
+          git remote set-url origin https://x-access-token:${{ secrets.PUSH_PAT }}@github.com/nixbear/malicious_ips.git
+          git push origin main
+
