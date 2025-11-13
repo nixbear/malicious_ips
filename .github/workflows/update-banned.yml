@@ -2,7 +2,7 @@ name: Update Fail2Ban banned IPs
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 */2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -26,13 +26,13 @@ jobs:
         run: |
           cd ~/malicious_ips && git pull
           git add malicious_ips.txt
-          
+
           if git diff --staged --quiet; then
             echo "Nothing to update."
             exit 0
           fi
-          
+
           git config user.name 'nixbear-actions'
           git config user.email ${{ secrets.GH_EMAIL }}
-          git commit -m "Update banned IPs $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          git commit -m "[auto]Update banned IPs every 2 hours $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
           git push
