@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PUSH_PAT }}
+          token: ${{ secrets.SECRET_TOKEN }}
           path: malicious_ips
 
       - name: Run update script
@@ -24,6 +24,7 @@ jobs:
       - name: Commit and push updated IP list
         working-directory: malicious_ips
         run: |
+          cd ~/malicious_ips && git pull
           git add malicious_ips.txt
           
           if git diff --staged --quiet; then
